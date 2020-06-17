@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="libraryTable">
+    <library name="FitnessTools">
+      <CLASSES />
+      <JAVADOC />
+      <SOURCES>
+        <root url="file://A:/SourceCode/FitnessTools" />
+      </SOURCES>
+    </library>
+  </component>
+</project>
