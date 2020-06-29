@@ -1,9 +1,13 @@
+@file:Suppress("NOTHING_TO_INLINE")
+
 package de.ulrich_boeing.mylib.extensions
 
 import java.awt.Color
 import kotlin.math.absoluteValue
-import kotlin.random.Random
+import kotlin.math.roundToInt
 
+
+// colors are defined as long-values converted to Int
 
 const val COLOR_WHITE = 0xFFFFFFFF.toInt()
 const val COLOR_BLACK = 0xFF000000.toInt()
@@ -31,17 +35,30 @@ inline val Int.alpha: Int
 inline val Int.HSB: FloatArray
     get() = Color.RGBtoHSB(this.red, this.green, this.blue, null)
 
-inline fun Int.setAlpha(alpha: Int): Int =
-    (this and 0x00FFFFFF) or (alpha shl 24)
-
 inline fun Int.setRed(red: Int): Int =
-    Int.fromRGBA(red, this.green, this.blue, this.alpha)
+    (this and 0xFF00FFFF.toInt()) or (red shl 16)
 
 inline fun Int.setGreen(green: Int): Int =
-    Int.fromRGBA(this.red, green, this.blue, this.alpha)
+    (this and 0xFFFF00FF.toInt()) or (green shl 8)
 
 inline fun Int.setBlue(blue: Int): Int =
-    Int.fromRGBA(this.red, this.green, blue, this.alpha)
+    (this and 0xFFFFFF00.toInt()) or blue
+
+inline fun Int.setAlpha(alpha: Int, offset: Int = 0): Int =
+//    Int.fromRGBA(this.red, this.green, this.blue, alpha + 1)
+    (this and 0x00FFFFFF) or ((alpha + offset) shl 24)
+
+inline fun Int.setRedNorm(normRed: Float) =
+    this.setRed((normRed * 255).toInt())
+
+inline fun Int.setGreenNorm(normGreen: Float) =
+    this.setGreen((normGreen * 255).toInt())
+
+inline fun Int.setBlueNorm(normBlue: Float) =
+    this.setBlue((normBlue * 255).toInt())
+
+inline fun Int.setAlphaNorm(normAlpha: Float, offset: Int = 0) =
+    this.setAlpha((normAlpha * (255 - offset)).toInt(), offset)
 
 /**
  * brightness liegt zwischen 0 und 255
@@ -60,21 +77,21 @@ inline fun Int.Companion.fromRGB(red: Int, green: Int, blue: Int): Int =
 inline fun Int.Companion.fromHSB(hue: Float, saturation: Float, brightness: Float) =
     Color.HSBtoRGB(hue, saturation, brightness)
 
-fun Int.Companion.randomColor(from: Int = COLOR_BLACK, until: Int = COLOR_WHITE): Int {
-    val red = Random.intInRange(from.red, until.red)
-    val green = Random.intInRange(from.green, until.green)
-    val blue = Random.intInRange(from.blue, until.blue)
-    val alpha = Random.intInRange(from.alpha, until.alpha)
-    return Int.fromRGBA(red, green, blue, alpha)
-}
-
-fun Int.mixColor(other: Int, amount: Float): Int {
-    val newRed = lerp(this.red, other.red, amount)
-    val newGreen = lerp(this.green, other.green, amount)
-    val newBlue = lerp(this.blue, other.blue, amount)
-    val newAlpha = lerp(this.alpha, other.alpha, amount)
-    return Int.fromRGBA(newRed, newGreen, newBlue, newAlpha)
-}
+//fun Int.Companion.randomColor(from: Int = COLOR_BLACK, until: Int = COLOR_WHITE): Int {
+//    val red = Random.intInRange(from.red, until.red)
+//    val green = Random.intInRange(from.green, until.green)
+//    val blue = Random.intInRange(from.blue, until.blue)
+//    val alpha = Random.intInRange(from.alpha, until.alpha)
+//    return Int.fromRGBA(red, green, blue, alpha)
+//}
+//
+//fun Int.mixColor(other: Int, amount: Float): Int {
+//    val newRed = lerp(this.red, other.red, amount)
+//    val newGreen = lerp(this.green, other.green, amount)
+//    val newBlue = lerp(this.blue, other.blue, amount)
+//    val newAlpha = lerp(this.alpha, other.alpha, amount)
+//    return Int.fromRGBA(newRed, newGreen, newBlue, newAlpha)
+//}
 
 fun Int.getRGBDiff(other: Int): IntArray {
     val redDiff = (this.red - other.red).absoluteValue
