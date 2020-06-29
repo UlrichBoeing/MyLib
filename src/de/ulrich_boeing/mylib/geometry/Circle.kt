@@ -1,8 +1,12 @@
 package de.ulrich_boeing.mylib.geometry
 
+import de.ulrich_boeing.mylib.extensions.square
 import processing.core.PGraphics
+import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlin.math.max
+
 
 class Circle(val center: Vec, val radius: Float): Figure {
     constructor() : this(Vec(0, 0), 1f)

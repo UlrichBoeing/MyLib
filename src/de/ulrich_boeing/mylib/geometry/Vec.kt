@@ -4,45 +4,28 @@ import processing.core.PGraphics
 import kotlin.math.*
 import kotlin.random.Random
 
+data class IntVec(var x: Int, var y: Int)
 
 // no cross product because it's only defined for 3 dimensional vectors
 
 open class Vec(var x: Float, var y: Float) {
-    // empty constructor sometimes used for initializing a variable
-    constructor() : this(0f, 0f)
-
+    constructor(x: Int, y: Int) : this(x.toFloat(), y.toFloat())
     constructor(vec: Vec) : this(vec.x, vec.y)
-    constructor(x: Int, y: Int) : this(x.toFloat(), y.toFloat())    // for mouseX, mouseY etc.
 
     companion object {
         const val PI = Math.PI.toFloat()
         const val TAU = 2 * PI
         fun fromAngle(angle: Float): Vec = Vec(cos(angle), sin(angle))
-        fun fromPolar(angle: Float, length: Float): Vec {
-            val vec = fromAngle(angle)
-            vec *= length
-            return vec
-        }
+        fun fromRandomAngle(): Vec = fromAngle(Random.nextFloat() * TAU)
+        fun fromPolar(angle: Float, length: Float) = fromAngle(angle) * length
 
-        fun fromPolar(angle: Float, length: Int): Vec =
-            fromPolar(angle, length.toFloat())
-
-        fun fromRandomAngle(): Vec =
-            fromAngle(Random.nextFloat() * TAU)
-
-        //        fun fromRandomPosition(width: Int, height: Int): Vec {
-//            val x = Random.floatInRange(0f, width.toFloat())
-//            val y = Random.floatInRange(0f, height.toFloat())
-//            return Vec(x, y)
-//        }
         fun scalarProjection(vec: Vec, direction: Vec): Float {
             val normDirection = Vec(direction).normalize()
             return vec dot normDirection
         }
     }
 
-    //    fun copy(): Vec = Vec(x, y)
-    inline fun set(x: Float, y: Float) {
+    fun set(x: Float, y: Float) {
         this.x = x
         this.y = y
     }
@@ -50,24 +33,21 @@ open class Vec(var x: Float, var y: Float) {
     operator fun component1(): Float = x
     operator fun component2(): Float = y
 
-    operator fun plus(vec: Vec): Vec =
-        Vec(x + vec.x, y + vec.y)
-
+    operator fun plus(vec: Vec) = Vec(x + vec.x, y + vec.y)
     operator fun plusAssign(vec: Vec) = set(x + vec.x, y + vec.y)
 
-    operator fun minus(vec: Vec): Vec =
-        Vec(x - vec.x, y - vec.y)
-
+    operator fun minus(vec: Vec) = Vec(x - vec.x, y - vec.y)
     operator fun minusAssign(vec: Vec) = set(x - vec.x, y - vec.y)
 
-    operator fun times(n: Float): Vec = Vec(n * x, n * y)
-    operator fun times(n: Int): Vec = Vec(n * x, n * y)
+    operator fun times(n: Float) = Vec(n * x, n * y)
+    operator fun times(n: Int) = Vec(n * x, n * y)
     operator fun timesAssign(n: Float) = set(n * x, n * y)
+    operator fun timesAssign(n: Int) = set(n * x, n * y)
 
-    operator fun div(n: Float): Vec = Vec(x / n, y / n)
+    operator fun div(n: Float) = Vec(x / n, y / n)
     operator fun divAssign(n: Float) = set(x / n, y / n)
 
-    operator fun unaryMinus(): Vec = Vec(-x, -y)
+    operator fun unaryMinus() = Vec(-x, -y)
     operator fun compareTo(vec: Vec): Int = squareLength.compareTo(vec.squareLength)
     override operator fun equals(other: Any?): Boolean =
         if (other is Vec)
@@ -94,9 +74,7 @@ open class Vec(var x: Float, var y: Float) {
     fun diffTauAngle(vec: Vec): Float = vec.tauAngle - tauAngle
 
     fun angleBetween(vec: Vec): Float {
-        if (x == 0f && y == 0f)
-            return 0f
-        if (vec.x == 0f && vec.y == 0f)
+        if (isZero() || vec.isZero())
             return 0f
 
         val fraction = (this dot vec) / (length * vec.length)
@@ -109,6 +87,7 @@ open class Vec(var x: Float, var y: Float) {
         }
     }
 
+    fun isZero(): Boolean = (x == 0f && y ==0f)
 
 
     fun normalize(): Vec {
@@ -130,6 +109,11 @@ open class Vec(var x: Float, var y: Float) {
         x = newX
         return this
     }
+
+    fun getRotated(angle: Float) = Vec(
+        x * cos(angle) - y * sin(angle),
+        x * sin(angle) + y * cos(angle)
+    )
 
     fun distance(vec: Vec): Float = sqrt(squareDistance(vec))
 
@@ -154,14 +138,12 @@ open class Vec(var x: Float, var y: Float) {
      */
     fun shiftInCircle(radius: Float): Vec {
         val angle = Vec.fromRandomAngle()
-        val shift =  angle * (radius * Random.nextFloat())
+        val shift = angle * (radius * Random.nextFloat())
         return this + shift
     }
 
     infix fun to(vec: Vec): Vec = Vec(vec.x - x, vec.y - y)
     infix fun dot(vec: Vec): Float = x * vec.x + y * vec.y
-
-    infix fun inside(rect: Rect): Boolean = !(x < rect.left || x > rect.right || y < rect.top || y > rect.bottom)
 
     override fun toString(): String {
         val xStr = "%.2f".format(x)
@@ -173,9 +155,7 @@ open class Vec(var x: Float, var y: Float) {
 
     fun lerp(vec: Vec, amount: Float): Vec = this + (vec - this) * amount
 
-    fun lerpList(vec: Vec, count: Int) = List<Vec>(count, { i -> lerp(vec, (i.toFloat() / (count - 1))) })
-
-//    fun tweenPoints(end: Vec, count: Int): Array<Vec> = Array(count) {i -> }
+    fun lerpList(vec: Vec, count: Int) = List<Vec>(count) { i -> lerp(vec, (i.toFloat() / (count - 1))) }
 
     fun log(name: String = ""): String {
         val msg = StringBuilder()
@@ -243,11 +223,11 @@ fun String.padIndexOf(char: Char, length: Int, padChar: Char = ' ', excludeChar:
 fun Float.toDegrees(): Float = this * 360f / Vec.TAU
 fun Float.toRadians(): Float = this * Vec.TAU / 360f
 
-fun Vec.drawAsCircle(g: PGraphics, radius : Float = 8f) {
+fun Vec.drawAsCircle(g: PGraphics, radius: Float = 8f) {
     g.ellipse(x, y, radius, radius)
 }
 
-fun Vec.toPoint(canvas: CanvasLayer): Point = Point(this, canvas.getColor(this))
+//fun Vec.toPoint(canvas: CanvasLayer): Point = Point(this, canvas.getColor(this))
 
 
 /**
